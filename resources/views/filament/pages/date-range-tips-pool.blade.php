@@ -1,24 +1,47 @@
 <x-filament-panels::page>
     <div class="space-y-10 p-4 sm:p-6">
-        {{-- Date Filter Form --}}
+        {{-- Date Range Filter Form --}}
         <div class="fi-section mb-4">
             <div
                 class="fi-section-content p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                    Select Report Date
+                    Select Date Range for Tips Pool Report
                 </h2>
                 {{ $this->form }}
             </div>
         </div>
 
-        {{-- Summary Cards Grid - 4 Columns --}}
+        {{-- Summary Cards Grid - 6 Columns for Date Range --}}
         @if (!empty($summary))
             <div class="fi-section">
                 <div class="fi-section-content">
-                    <div class="mb-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <div class="mb-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
+                        {{-- Date Range Card --}}
+                        <div
+                            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <div class="p-6">
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex-shrink-0 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                        <x-heroicon-o-calendar-days
+                                            class="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Date Range
+                                        </p>
+                                        <p class="text-base font-bold text-gray-900 dark:text-gray-100">
+                                            {{ $summary['date_range'] }}
+                                        </p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                            {{ $summary['total_days'] }} day{{ $summary['total_days'] > 1 ? 's' : '' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- Total Employees Card --}}
                         <div
-                            class=" bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
+                            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
                             <div class="p-6">
                                 <div class="flex items-center space-x-4">
                                     <div class="flex-shrink-0 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -30,16 +53,7 @@
                                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
                                             {{ $summary['total_employees'] }}
                                         </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                                            <span
-                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 mr-2">
-                                                {{ $summary['employees_full_points'] }} Full
-                                            </span>
-                                            <span
-                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300">
-                                                {{ $summary['employees_partial_points'] }} Partial
-                                            </span>
-                                        </p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Unique employees</p>
                                     </div>
                                 </div>
                             </div>
@@ -59,13 +73,13 @@
                                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
                                             {{ number_format($summary['total_points'], 2) }}
                                         </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Points earned today</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Points earned</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Available Tips Card --}}
+                        {{-- Total Tips Card --}}
                         <div
                             class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
                             <div class="p-6">
@@ -74,8 +88,8 @@
                                         <x-heroicon-o-banknotes class="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Available
-                                            Tips</p>
+                                        <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Total Tips
+                                        </p>
                                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
                                             ${{ number_format($summary['total_tips_amount'], 2) }}
                                         </p>
@@ -105,12 +119,31 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Average Tips Per Day Card --}}
+                        <div
+                            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <div class="p-6">
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex-shrink-0 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                                        <x-heroicon-o-chart-bar class="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Avg/Day</p>
+                                        <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                                            ${{ number_format($summary['avg_tips_per_day'], 2) }}
+                                        </p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Average tips</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         @endif
 
-        {{-- Tips Distribution Table --}}
+        {{-- Employee Summary Table --}}
         @if (!empty($tipsData))
             <div class="fi-section">
                 <div class="fi-section-content">
@@ -121,11 +154,11 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                        Tips Distribution
+                                        Employee Summary
                                     </h3>
                                     <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                                        {{ \Carbon\Carbon::parse($selectedDate)->format('F j, Y') }} • Employee points
-                                        and tip allocation breakdown
+                                        {{ $summary['date_range'] }} • Aggregated employee performance and tip
+                                        allocation
                                     </p>
                                 </div>
                                 <div class="flex items-center space-x-2">
@@ -150,23 +183,23 @@
                                         </th>
                                         <th
                                             class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-                                            Hours
+                                            Days Worked
                                         </th>
                                         <th
                                             class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-                                            Base Points
+                                            Total Hours
                                         </th>
                                         <th
                                             class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-                                            Calculated Points
+                                            Avg Hours/Day
                                         </th>
                                         <th
                                             class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-                                            Status
+                                            Total Points
                                         </th>
                                         <th
                                             class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-                                            Tip Amount
+                                            Total Tips
                                         </th>
                                     </tr>
                                 </thead>
@@ -187,38 +220,23 @@
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                                 <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                    {{ number_format($data['hours_worked'], 2) }}h
+                                                    {{ $data['days_worked'] }}
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                                 <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                    {{ number_format($data['job_position_points'], 2) }}
+                                                    {{ number_format($data['total_hours'], 2) }}h
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                                <div class="space-y-1">
-                                                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                        {{ number_format($data['calculated_points'], 2) }}
-                                                    </div>
-                                                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                        {{ $data['percentage'] }}% of base
-                                                    </div>
-                                                </div>
+                                                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    {{ number_format($data['avg_hours_per_day'], 2) }}h
+                                                </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                                @if ($data['qualifies_for_full_points'])
-                                                    <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
-                                                        <x-heroicon-m-check-circle class="w-4 h-4 mr-1" />
-                                                        Full Points
-                                                    </span>
-                                                @else
-                                                    <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200">
-                                                        <x-heroicon-m-clock class="w-4 h-4 mr-1" />
-                                                        Proportional
-                                                    </span>
-                                                @endif
+                                                <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                    {{ number_format($data['total_calculated_points'], 2) }}
+                                                </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                                 <div class="text-lg font-bold text-green-600 dark:text-green-400">
@@ -233,6 +251,57 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Daily Breakdown --}}
+            @if (!empty($dailyBreakdown))
+                <div class="fi-section">
+                    <div class="fi-section-content">
+                        <div
+                            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+                                <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Daily Breakdown</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Day-by-day summary of tips
+                                    pool activity</p>
+                            </div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                    @foreach ($dailyBreakdown as $day)
+                                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                    {{ \Carbon\Carbon::parse($day['date'])->format('M j, Y') }}
+                                                </h4>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                                    {{ \Carbon\Carbon::parse($day['date'])->format('l') }}
+                                                </span>
+                                            </div>
+                                            <div class="space-y-2">
+                                                <div class="flex justify-between items-center">
+                                                    <span
+                                                        class="text-xs text-gray-600 dark:text-gray-300">Employees:</span>
+                                                    <span
+                                                        class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $day['total_employees'] }}</span>
+                                                </div>
+                                                <div class="flex justify-between items-center">
+                                                    <span
+                                                        class="text-xs text-gray-600 dark:text-gray-300">Points:</span>
+                                                    <span
+                                                        class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ number_format($day['total_points'], 2) }}</span>
+                                                </div>
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-xs text-gray-600 dark:text-gray-300">Tips:</span>
+                                                    <span
+                                                        class="text-sm font-bold text-green-600 dark:text-green-400">${{ number_format($day['total_tips'], 2) }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         @else
             <div class="fi-section">
                 <div class="fi-section-content">
@@ -245,84 +314,86 @@
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No eligible employees
                             found</h3>
                         <p class="text-gray-600 dark:text-gray-300 max-w-md mx-auto">
-                            No employees with tip-eligible positions worked on
-                            {{ \Carbon\Carbon::parse($selectedDate)->format('F j, Y') }}.
-                            Try selecting a different date or check if any positions have tips enabled.
+                            No employees with tip-eligible positions worked between
+                            {{ \Carbon\Carbon::parse($startDate)->format('M j, Y') }} and
+                            {{ \Carbon\Carbon::parse($endDate)->format('M j, Y') }}.
+                            Try selecting a different date range or check if any positions have tips enabled.
                         </p>
                     </div>
                 </div>
             </div>
         @endif
 
-        {{-- Calculation Rules --}}
+        {{-- Calculation Rules for Date Range --}}
         <div class="fi-section">
-            <div class="fi-section-content mt-4">
+            <div class="fi-section-content">
                 <div
-                    class="mt-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                     <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-                        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Calculation Rules</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">How tips are calculated and
-                            distributed
-                        </p>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Date Range Calculation Rules
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">How tips are calculated and aggregated
+                            across multiple days</p>
                     </div>
                     <div class="p-6 space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                <x-heroicon-o-calendar-days class="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Daily
+                                    Aggregation</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                                    Employee hours and points are calculated separately for each day, then aggregated
+                                    across the selected date range.
+                                    Each day follows the same 5+ hour rule for full points vs. proportional
+                                    distribution.
+                                </p>
+                            </div>
+                        </div>
+
                         <div class="flex items-start space-x-4">
                             <div class="flex-shrink-0 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
                                 <x-heroicon-o-check-circle class="h-6 w-6 text-green-600 dark:text-green-400" />
                             </div>
                             <div class="flex-1">
-                                <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Full Points
-                                    (5+ hours)</h4>
+                                <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Employee
+                                    Consolidation</h4>
                                 <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                                    Employees working 5 or more hours receive the full point value assigned to their
-                                    position.
-                                    This ensures full-time workers get their complete tip allocation.
+                                    Multiple time entries for the same employee on the same day are consolidated into
+                                    total daily hours.
+                                    Final report shows unique employees with their cumulative hours, points, and tips
+                                    across all days.
                                 </p>
                             </div>
                         </div>
 
                         <div class="flex items-start space-x-4">
                             <div class="flex-shrink-0 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                                <x-heroicon-o-calculator class="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Proportional
-                                    Points (&lt;5 hours)</h4>
-                                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                                    Points calculated using rule of 3: <code
-                                        class="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">(hours worked ÷
-                                        5) × position points</code>.
-                                    Part-time workers receive tips proportional to their hours.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-start space-x-4">
-                            <div class="flex-shrink-0 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                <x-heroicon-o-banknotes class="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                <x-heroicon-o-banknotes class="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                             </div>
                             <div class="flex-1">
                                 <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Tip
                                     Distribution</h4>
                                 <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                                    Daily tips are distributed proportionally based on calculated points. Each point
-                                    earns the same amount,
-                                    ensuring fair distribution across all eligible employees.
+                                    Total tips from all days in the range are pooled together and distributed
+                                    proportionally
+                                    based on each employee's total calculated points across all working days.
                                 </p>
                             </div>
                         </div>
 
                         <div class="flex items-start space-x-4">
                             <div class="flex-shrink-0 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                                <x-heroicon-o-user-group class="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                                <x-heroicon-o-chart-bar class="h-6 w-6 text-purple-600 dark:text-purple-400" />
                             </div>
                             <div class="flex-1">
-                                <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Eligibility
-                                    Requirements</h4>
+                                <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Performance
+                                    Metrics</h4>
                                 <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                                    Only employees in positions with "Applies for Tips" enabled are included in the
-                                    distribution.
-                                    Check job position settings to modify tip eligibility.
+                                    The report includes total hours worked, days worked, and average hours per day to
+                                    provide
+                                    comprehensive performance insights across the selected time period.
                                 </p>
                             </div>
                         </div>
