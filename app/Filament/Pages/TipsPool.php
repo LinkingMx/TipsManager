@@ -92,11 +92,23 @@ class TipsPool extends Page implements Forms\Contracts\HasForms
                     'employee_name' => $entry->employee_name,
                     'job_title' => $entry->job_title,
                     'payable_hours' => 0,
+                    'unpaid_break_time' => 0,
                     'job_position' => $jobPosition,
+                    'in_date' => $entry->in_date,
+                    'out_date' => $entry->out_date,
                 ];
+            } else {
+                // Update dates if this entry has more recent times
+                if (! $groupedEntries[$key]['in_date'] || $entry->in_date < $groupedEntries[$key]['in_date']) {
+                    $groupedEntries[$key]['in_date'] = $entry->in_date;
+                }
+                if (! $groupedEntries[$key]['out_date'] || $entry->out_date > $groupedEntries[$key]['out_date']) {
+                    $groupedEntries[$key]['out_date'] = $entry->out_date;
+                }
             }
 
             $groupedEntries[$key]['payable_hours'] += $entry->payable_hours ?? 0;
+            $groupedEntries[$key]['unpaid_break_time'] += $entry->unpaid_break_time ?? 0;
         }
 
         // Process grouped entries
@@ -123,6 +135,9 @@ class TipsPool extends Page implements Forms\Contracts\HasForms
                 'calculated_points' => round($calculatedPoints, 2),
                 'qualifies_for_full_points' => $qualifiesForFullPoints,
                 'percentage' => $jobPositionPoints > 0 ? round(($calculatedPoints / $jobPositionPoints) * 100, 1) : 0,
+                'in_date' => $groupedEntry['in_date'],
+                'out_date' => $groupedEntry['out_date'],
+                'unpaid_break_time' => $groupedEntry['unpaid_break_time'],
             ];
         }
 

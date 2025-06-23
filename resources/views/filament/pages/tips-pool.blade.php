@@ -149,6 +149,18 @@
                                             Position
                                         </th>
                                         <th
+                                            class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                            In Date
+                                        </th>
+                                        <th
+                                            class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                            Out Date
+                                        </th>
+                                        <th
+                                            class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                            Unpaid Break
+                                        </th>
+                                        <th
                                             class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                                             Hours
                                         </th>
@@ -183,6 +195,21 @@
                                                 <span
                                                     class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
                                                     {{ $data['job_title'] }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900 dark:text-gray-100">
+                                                    {{ $data['in_date'] ? \Carbon\Carbon::parse($data['in_date'])->format('m/d/Y H:i') : '-' }}
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900 dark:text-gray-100">
+                                                    {{ $data['out_date'] ? \Carbon\Carbon::parse($data['out_date'])->format('m/d/Y H:i') : '-' }}
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    {{ number_format($data['unpaid_break_time'], 2) }}h
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center">
