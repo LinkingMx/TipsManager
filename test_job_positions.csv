@@ -1,0 +1,8 @@
+name,points,applies_for_tips
+Server,3.0,true
+Line Cook,2.5,true
+Dishwasher,1.5,true
+Manager,0,false
+Host,1.0,true
+Busser,1.2,true
+Bartender,3.5,true

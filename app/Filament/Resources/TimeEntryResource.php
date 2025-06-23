@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Imports\TimeEntryImporter;
 use App\Filament\Resources\TimeEntryResource\Pages;
 use App\Models\JobPosition;
 use App\Models\TimeEntry;
@@ -10,9 +11,11 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ImportAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Response;
 
 class TimeEntryResource extends Resource
 {
@@ -349,6 +352,181 @@ class TimeEntryResource extends Resource
                     ->boolean()
                     ->trueLabel('Auto clock-out entries')
                     ->falseLabel('Manual clock-out entries'),
+            ])
+            ->headerActions([
+                // Import Time Entries
+                ImportAction::make('import')
+                    ->label('Import Time Entries')
+                    ->importer(TimeEntryImporter::class)
+                    ->color('success')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->modalHeading('Import Time Entries')
+                    ->modalDescription('Upload a CSV file to import time entries. You can choose to update existing records or skip them.')
+                    ->modalSubmitActionLabel('Import')
+                    ->modalWidth('lg'),
+
+                // Export Time Entries to CSV (immediate, not queued)
+                Tables\Actions\Action::make('export')
+                    ->label('Export Time Entries')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('primary')
+                    ->action(function () {
+                        $timeEntries = TimeEntry::all();
+
+                        if ($timeEntries->isEmpty()) {
+                            Notification::make()
+                                ->warning()
+                                ->title('No Data to Export')
+                                ->body('There are no time entries to export.')
+                                ->send();
+
+                            return;
+                        }
+
+                        $csvData = [];
+                        $csvData[] = [
+                            'external_id',
+                            'employee_name',
+                            'employee_external_id',
+                            'job_title',
+                            'location',
+                            'location_code',
+                            'department',
+                            'in_date',
+                            'out_date',
+                            'total_hours',
+                            'regular_hours',
+                            'overtime_hours',
+                            'hourly_rate',
+                            'overtime_rate',
+                            'total_pay',
+                            'regular_pay',
+                            'overtime_pay',
+                            'auto_clock_out',
+                            'notes',
+                        ];
+
+                        foreach ($timeEntries as $entry) {
+                            $csvData[] = [
+                                $entry->external_id,
+                                $entry->employee_name,
+                                $entry->employee_external_id,
+                                $entry->job_title,
+                                $entry->location,
+                                $entry->location_code,
+                                $entry->department,
+                                $entry->in_date?->format('Y-m-d H:i:s'),
+                                $entry->out_date?->format('Y-m-d H:i:s'),
+                                $entry->total_hours,
+                                $entry->regular_hours,
+                                $entry->overtime_hours,
+                                $entry->hourly_rate,
+                                $entry->overtime_rate,
+                                $entry->total_pay,
+                                $entry->regular_pay,
+                                $entry->overtime_pay,
+                                $entry->auto_clock_out ? '1' : '0',
+                                $entry->notes,
+                            ];
+                        }
+
+                        $filename = 'time_entries_export_'.now()->format('Y_m_d_H_i_s').'.csv';
+                        $headers = [
+                            'Content-Type' => 'text/csv',
+                            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+                        ];
+
+                        $callback = function () use ($csvData) {
+                            $file = fopen('php://output', 'w');
+                            foreach ($csvData as $row) {
+                                fputcsv($file, $row);
+                            }
+                            fclose($file);
+                        };
+
+                        Notification::make()
+                            ->success()
+                            ->title('Export Completed')
+                            ->body("Exported {$timeEntries->count()} time entries successfully!")
+                            ->send();
+
+                        return Response::stream($callback, 200, $headers);
+                    }),
+
+                // Download CSV Template
+                Tables\Actions\Action::make('download_template')
+                    ->label('Download Template')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('gray')
+                    ->action(function () {
+                        $templateData = [];
+                        $templateData[] = [
+                            'external_id',
+                            'employee_name',
+                            'employee_external_id',
+                            'job_title',
+                            'location',
+                            'location_code',
+                            'department',
+                            'in_date',
+                            'out_date',
+                            'total_hours',
+                            'regular_hours',
+                            'overtime_hours',
+                            'hourly_rate',
+                            'overtime_rate',
+                            'total_pay',
+                            'regular_pay',
+                            'overtime_pay',
+                            'auto_clock_out',
+                            'notes',
+                        ];
+
+                        // Add sample data row
+                        $templateData[] = [
+                            'TE001',
+                            'John Doe',
+                            'EMP001',
+                            'Server',
+                            'Main Restaurant',
+                            'LOC001',
+                            'Front of House',
+                            '2025-01-15 09:00:00',
+                            '2025-01-15 17:00:00',
+                            '8.00',
+                            '8.00',
+                            '0.00',
+                            '15.50',
+                            '23.25',
+                            '124.00',
+                            '124.00',
+                            '0.00',
+                            '0',
+                            'Regular shift',
+                        ];
+
+                        $filename = 'time_entries_template.csv';
+                        $headers = [
+                            'Content-Type' => 'text/csv',
+                            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+                        ];
+
+                        $callback = function () use ($templateData) {
+                            $file = fopen('php://output', 'w');
+                            foreach ($templateData as $row) {
+                                fputcsv($file, $row);
+                            }
+                            fclose($file);
+                        };
+
+                        Notification::make()
+                            ->success()
+                            ->title('Template Downloaded')
+                            ->body('Time entries template downloaded successfully!')
+                            ->send();
+
+                        return Response::stream($callback, 200, $headers);
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

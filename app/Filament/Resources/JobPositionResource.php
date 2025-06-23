@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Imports\JobPositionImporter;
 use App\Filament\Resources\JobPositionResource\Pages;
 use App\Models\JobPosition;
 use Filament\Forms;
@@ -103,6 +104,71 @@ class JobPositionResource extends Resource
                     ->trueLabel('Tips Eligible')
                     ->falseLabel('Not Tips Eligible')
                     ->native(false),
+            ])->headerActions([
+                Tables\Actions\ImportAction::make()
+                    ->importer(JobPositionImporter::class)
+                    ->label('Import Job Positions')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('success')
+                    ->maxRows(1000)
+                    ->csvDelimiter(',')
+                    ->chunkSize(100),
+
+                Tables\Actions\Action::make('exportDirect')
+                    ->label('Export Job Positions')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('primary')
+                    ->action(function () {
+                        $positions = JobPosition::all();
+
+                        $headers = [
+                            'Content-Type' => 'text/csv',
+                            'Content-Disposition' => 'attachment; filename="job_positions_export_'.date('Y-m-d_H-i-s').'.csv"',
+                        ];
+
+                        $csvData = "name,points,applies_for_tips\n";
+                        foreach ($positions as $position) {
+                            $csvData .= '"'.str_replace('"', '""', $position->name).'",'.
+                                       $position->points.','.
+                                       ($position->applies_for_tips ? 'true' : 'false')."\n";
+                        }
+
+                        return response()->stream(
+                            function () use ($csvData) {
+                                echo $csvData;
+                            },
+                            200,
+                            $headers
+                        );
+                    })
+                    ->tooltip('Download CSV file immediately'),
+
+                Tables\Actions\Action::make('downloadTemplate')
+                    ->label('Download Template')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('gray')
+                    ->action(function () {
+                        $headers = [
+                            'Content-Type' => 'text/csv',
+                            'Content-Disposition' => 'attachment; filename="job_positions_template.csv"',
+                        ];
+
+                        $csvData = "name,points,applies_for_tips\n";
+                        $csvData .= "Line Cook,2.5,true\n";
+                        $csvData .= "Server,3.0,true\n";
+                        $csvData .= "Dishwasher,1.5,true\n";
+                        $csvData .= "Manager,0,false\n";
+                        $csvData .= "Host,1.0,true\n";
+
+                        return response()->stream(
+                            function () use ($csvData) {
+                                echo $csvData;
+                            },
+                            200,
+                            $headers
+                        );
+                    })
+                    ->tooltip('Download a sample CSV file with the correct format for importing job positions'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
