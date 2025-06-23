@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Exports\DailyTipsPoolExport;
 use App\Models\DailyTip;
 use App\Models\JobPosition;
 use App\Models\TimeEntry;
@@ -179,17 +180,53 @@ class TipsPool extends Page implements Forms\Contracts\HasForms
             Action::make('export')
                 ->label('Export Report')
                 ->icon('heroicon-o-document-arrow-down')
-                ->action('exportReport')
+                ->action(function () {
+                    return $this->exportReport();
+                })
                 ->color('success'),
         ];
     }
 
-    public function exportReport(): void
+    public function exportReport()
     {
-        Notification::make()
-            ->title('Export functionality')
-            ->body('Export feature will be implemented in the next phase.')
-            ->info()
-            ->send();
+        try {
+            // Ensure we have data to export
+            if (empty($this->summary) || empty($this->tipsData)) {
+                $this->generateReport();
+            }
+
+            // Check if there's data to export
+            if (empty($this->tipsData)) {
+                Notification::make()
+                    ->title('No Data to Export')
+                    ->body('No tips data found for the selected date.')
+                    ->warning()
+                    ->send();
+
+                return;
+            }
+
+            // Generate filename with selected date
+            $date = Carbon::parse($this->selectedDate)->format('Y-m-d');
+            $filename = "daily-tips-pool_{$date}.xlsx";
+
+            // Show success notification
+            Notification::make()
+                ->title('Exportando...')
+                ->body('Preparando archivo Excel para descargar.')
+                ->success()
+                ->send();
+
+            // Create and download the Excel file
+            return (new DailyTipsPoolExport($this->summary, $this->tipsData, $this->selectedDate))
+                ->download($filename);
+
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Error de Exportación')
+                ->body('Falló la exportación: '.$e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 }

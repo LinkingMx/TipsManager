@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Exports\DateRangeTipsPoolExport;
 use App\Models\DailyTip;
 use App\Models\JobPosition;
 use App\Models\TimeEntry;
@@ -248,17 +249,43 @@ class DateRangeTipsPool extends Page implements Forms\Contracts\HasForms
             Action::make('export')
                 ->label('Export Report')
                 ->icon('heroicon-o-document-arrow-down')
-                ->action('exportReport')
+                ->action(function () {
+                    return $this->exportReport();
+                })
                 ->color('success'),
         ];
     }
 
-    public function exportReport(): void
+    public function exportReport()
     {
-        Notification::make()
-            ->title('Export functionality')
-            ->body('Date range export feature will be implemented in the next phase.')
-            ->info()
-            ->send();
+        try {
+            // Ensure we have data to export
+            if (empty($this->summary) || empty($this->tipsData)) {
+                $this->generateReport();
+            }
+
+            // Generate filename with date range
+            $startDate = Carbon::parse($this->startDate)->format('Y-m-d');
+            $endDate = Carbon::parse($this->endDate)->format('Y-m-d');
+            $filename = "date-range-tips-pool_{$startDate}_to_{$endDate}.xlsx";
+
+            // Show success notification
+            Notification::make()
+                ->title('Exportando...')
+                ->body('Preparando archivo Excel para descargar.')
+                ->success()
+                ->send();
+
+            // Use the Exportable trait method to download directly
+            return (new DateRangeTipsPoolExport($this->summary, $this->tipsData, $this->dailyBreakdown))
+                ->download($filename);
+
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Error de Exportación')
+                ->body('Falló la exportación: '.$e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 }
