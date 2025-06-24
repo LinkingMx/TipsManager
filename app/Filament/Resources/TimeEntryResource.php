@@ -51,9 +51,8 @@ class TimeEntryResource extends Resource
                                             ->maxLength(255)
                                             ->columnSpan(1),
 
-                                        Forms\Components\TextInput::make('employee_external_id')
+                                        Forms\Components\TextInput::make('employee_id')
                                             ->label('Employee ID')
-                                            ->required()
                                             ->maxLength(255)
                                             ->columnSpan(1),
 
@@ -242,7 +241,7 @@ class TimeEntryResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('employee_external_id')
+                Tables\Columns\TextColumn::make('employee_id')
                     ->label('Employee ID')
                     ->searchable()
                     ->sortable(),

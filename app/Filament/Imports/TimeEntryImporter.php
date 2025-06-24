@@ -37,15 +37,23 @@ class TimeEntryImporter extends Importer
             // Employee Information
             ImportColumn::make('employee_id')
                 ->label('Employee ID')
-                ->example('EMP001')
-                ->guess(['emp_id', 'staff_id'])
+                ->example('1200000004664290000')
+                ->guess(['employee_id', 'employee id', 'emp_id', 'staff_id', 'employee_number'])
+                ->castStateUsing(function ($state): ?string {
+                    if (blank($state)) {
+                        return null;
+                    }
+
+                    // Convert numeric employee IDs to string to handle large numbers
+                    return (string) $state;
+                })
                 ->rules(['nullable', 'string', 'max:50']),
 
             ImportColumn::make('employee_name')
                 ->requiredMapping()
                 ->label('Employee Name')
                 ->example('John Doe')
-                ->guess(['name', 'full_name', 'staff_name'])
+                ->guess(['employee', 'name', 'full_name', 'staff_name'])
                 ->rules(['required', 'string', 'max:255']),
 
             // Job Information
@@ -53,7 +61,7 @@ class TimeEntryImporter extends Importer
                 ->requiredMapping()
                 ->label('Job Title')
                 ->example('Server')
-                ->guess(['position', 'role', 'job'])
+                ->guess(['job_title', 'job title', 'position', 'role', 'job'])
                 ->rules(['required', 'string', 'max:255']),
 
             // Time Information
@@ -61,7 +69,7 @@ class TimeEntryImporter extends Importer
                 ->requiredMapping()
                 ->label('Clock In Date/Time')
                 ->example('2025-06-22 09:00:00')
-                ->guess(['start_time', 'clock_in', 'begin_time'])
+                ->guess(['in_date', 'in date', 'start_time', 'clock_in', 'begin_time'])
                 ->castStateUsing(function (string $state): ?\DateTime {
                     if (blank($state)) {
                         return null;
@@ -77,7 +85,7 @@ class TimeEntryImporter extends Importer
             ImportColumn::make('out_date')
                 ->label('Clock Out Date/Time')
                 ->example('2025-06-22 17:00:00')
-                ->guess(['end_time', 'clock_out', 'finish_time'])
+                ->guess(['out_date', 'out date', 'end_time', 'clock_out', 'finish_time'])
                 ->castStateUsing(function (string $state): ?\DateTime {
                     if (blank($state)) {
                         return null;
@@ -95,41 +103,42 @@ class TimeEntryImporter extends Importer
                 ->label('Total Hours')
                 ->numeric(decimalPlaces: 2)
                 ->example('8.00')
-                ->guess(['hours', 'total_time'])
+                ->guess(['total_hours', 'total hours', 'hours', 'total_time'])
                 ->rules(['nullable', 'numeric', 'min:0', 'max:24']),
 
             ImportColumn::make('payable_hours')
                 ->label('Payable Hours')
                 ->numeric(decimalPlaces: 2)
                 ->example('7.50')
-                ->guess(['billable_hours', 'paid_hours'])
+                ->guess(['payable_hours', 'payable hours', 'billable_hours', 'paid_hours'])
                 ->rules(['nullable', 'numeric', 'min:0', 'max:24']),
 
             ImportColumn::make('regular_hours')
                 ->label('Regular Hours')
                 ->numeric(decimalPlaces: 2)
                 ->example('8.00')
-                ->guess(['standard_hours'])
+                ->guess(['regular_hours', 'regular hours', 'standard_hours'])
                 ->rules(['nullable', 'numeric', 'min:0', 'max:24']),
 
             ImportColumn::make('overtime_hours')
                 ->label('Overtime Hours')
                 ->numeric(decimalPlaces: 2)
                 ->example('2.00')
-                ->guess(['ot_hours', 'extra_hours'])
+                ->guess(['overtime_hours', 'overtime hours', 'ot_hours', 'extra_hours'])
                 ->rules(['nullable', 'numeric', 'min:0', 'max:12']),
 
             ImportColumn::make('unpaid_break_time')
                 ->label('Unpaid Break Time')
                 ->numeric(decimalPlaces: 2)
                 ->example('0.50')
-                ->guess(['break_time', 'unpaid_break'])
+                ->guess(['unpaid_break_time', 'unpaid break time', 'break_time', 'unpaid_break'])
                 ->rules(['nullable', 'numeric', 'min:0', 'max:4']),
 
             ImportColumn::make('paid_break_time')
                 ->label('Paid Break Time')
                 ->numeric(decimalPlaces: 2)
                 ->example('0.25')
+                ->guess(['paid_break_time', 'paid break time', 'paid_break'])
                 ->guess(['paid_break'])
                 ->rules(['nullable', 'numeric', 'min:0', 'max:4']),
 
