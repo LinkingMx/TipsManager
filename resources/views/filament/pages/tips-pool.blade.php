@@ -32,12 +32,21 @@
                                         </p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
                                             <span
-                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 mr-2">
-                                                {{ $summary['employees_full_points'] }} Full
+                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 mr-2">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                                AM: {{ $summary['am_employees'] }}
                                             </span>
                                             <span
-                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300">
-                                                {{ $summary['employees_partial_points'] }} Partial
+                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                                                </svg>
+                                                PM: {{ $summary['pm_employees'] }}
                                             </span>
                                         </p>
                                     </div>
@@ -59,7 +68,10 @@
                                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
                                             {{ number_format($summary['total_points'], 2) }}
                                         </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Points earned today</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                            AM: {{ number_format($summary['am_total_points'], 2) }} |
+                                            PM: {{ number_format($summary['pm_total_points'], 2) }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -79,7 +91,10 @@
                                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
                                             ${{ number_format($summary['total_tips_amount'], 2) }}
                                         </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">To distribute</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                            AM: ${{ number_format($summary['am_tips_amount'], 2) }} |
+                                            PM: ${{ number_format($summary['pm_tips_amount'], 2) }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -98,9 +113,58 @@
                                         <p class="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Per Point
                                         </p>
                                         <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                            ${{ number_format($summary['tip_per_point'], 2) }}
+                                            Avg:
+                                            ${{ number_format(($summary['am_tip_per_point'] + $summary['pm_tip_per_point']) / 2, 2) }}
                                         </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Rate per point</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                            AM: ${{ number_format($summary['am_tip_per_point'], 2) }} |
+                                            PM: ${{ number_format($summary['pm_tip_per_point'], 2) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- No Tips Alert --}}
+        @if (
+            !empty($summary) &&
+                $summary['total_tips_amount'] == 0 &&
+                isset($summary['eligible_employees_count']) &&
+                $summary['eligible_employees_count'] > 0)
+            <div class="fi-section">
+                <div class="fi-section-content">
+                    <div
+                        class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0">
+                                <svg class="h-8 w-8 text-amber-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-2">
+                                    No Tips Registered for This Date
+                                </h3>
+                                <div class="text-amber-700 dark:text-amber-300 space-y-2">
+                                    <p>
+                                        <strong>{{ $summary['eligible_employees_count'] }}</strong> employees with
+                                        tip-eligible positions worked on
+                                        <strong>{{ \Carbon\Carbon::parse($selectedDate)->format('F j, Y') }}</strong>,
+                                        but no tips have been registered for distribution.
+                                    </p>
+                                    <div class="mt-4 p-4 bg-amber-100 dark:bg-amber-900/40 rounded-lg">
+                                        <p class="font-medium mb-2">To distribute tips for this date:</p>
+                                        <ol class="list-decimal list-inside space-y-1 text-sm">
+                                            <li>Go to <strong>Daily Tips</strong> section</li>
+                                            <li>Add tip amounts for AM and/or PM shifts</li>
+                                            <li>Return here to generate the distribution report</li>
+                                        </ol>
                                     </div>
                                 </div>
                             </div>
@@ -147,6 +211,10 @@
                                         <th
                                             class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                                             Position
+                                        </th>
+                                        <th
+                                            class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                            Shift
                                         </th>
                                         <th
                                             class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
@@ -197,6 +265,26 @@
                                                     {{ $data['job_title'] }}
                                                 </span>
                                             </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                                <span
+                                                    class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full 
+                                                    {{ $data['shift'] === 'AM' ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300' : 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300' }}">
+                                                    <svg class="w-3 h-3 mr-1" fill="currentColor"
+                                                        viewBox="0 0 20 20">
+                                                        @if ($data['shift'] === 'AM')
+                                                            {{-- Sun icon for AM --}}
+                                                            <path fill-rule="evenodd"
+                                                                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                                                                clip-rule="evenodd" />
+                                                        @else
+                                                            {{-- Moon icon for PM --}}
+                                                            <path
+                                                                d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                                                        @endif
+                                                    </svg>
+                                                    {{ $data['shift'] }}
+                                                </span>
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm text-gray-900 dark:text-gray-100">
                                                     {{ $data['in_date'] ? \Carbon\Carbon::parse($data['in_date'])->format('m/d/Y H:i') : '-' }}
@@ -224,7 +312,8 @@
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                                 <div class="space-y-1">
-                                                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                    <div
+                                                        class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                                         {{ number_format($data['calculated_points'], 2) }}
                                                     </div>
                                                     <div class="text-xs text-gray-500 dark:text-gray-400">

@@ -65,6 +65,15 @@ class TipsPool extends Page implements Forms\Contracts\HasForms
         // Debug log
         \Log::info('Generating report for date: '.$date->format('Y-m-d'));
 
+        // Get BOTH AM and PM tips for the selected date
+        $amTips = DailyTip::whereDate('date', $date)
+            ->where('shift_period', 'AM')
+            ->first();
+
+        $pmTips = DailyTip::whereDate('date', $date)
+            ->where('shift_period', 'PM')
+            ->first();
+
         // Get all time entries for the selected date with eligible job positions
         $timeEntries = TimeEntry::whereDate('in_date', $date)
             ->whereNotNull('job_title')
@@ -72,13 +81,70 @@ class TipsPool extends Page implements Forms\Contracts\HasForms
 
         \Log::info('Found time entries: '.$timeEntries->count());
 
-        $this->tipsData = [];
-        $totalPoints = 0;
+        // Check if there are employees with tip-eligible positions
+        $eligibleEmployees = 0;
+        foreach ($timeEntries as $entry) {
+            $jobPosition = JobPosition::where('name', $entry->job_title)->first();
+            if ($jobPosition && $jobPosition->applies_for_tips) {
+                $eligibleEmployees++;
+            }
+        }
 
-        // Group time entries by employee and job title
-        $groupedEntries = [];
+        // Separate employees by shift based on in_date time
+        $amEmployees = [];
+        $pmEmployees = [];
 
         foreach ($timeEntries as $entry) {
+            $inTime = Carbon::parse($entry->in_date);
+            $cutoffTime = $date->copy()->setTime(14, 0, 0); // 2:00 PM
+
+            if ($inTime->lt($cutoffTime)) {
+                $amEmployees[] = $entry;
+            } else {
+                $pmEmployees[] = $entry;
+            }
+        }
+
+        // Process AM shift
+        $amResults = $this->processShift($amEmployees, $amTips, 'AM');
+
+        // Process PM shift
+        $pmResults = $this->processShift($pmEmployees, $pmTips, 'PM');
+
+        // Combine results
+        $this->tipsData = array_merge($amResults, $pmResults);
+
+        // Update summary to show both shifts
+        $this->summary = [
+            'selected_date' => $date->format('Y-m-d'),
+            'am_tips_amount' => $amTips ? $amTips->amount : 0,
+            'pm_tips_amount' => $pmTips ? $pmTips->amount : 0,
+            'total_tips_amount' => ($amTips ? $amTips->amount : 0) + ($pmTips ? $pmTips->amount : 0),
+            'am_employees' => count($amResults),
+            'pm_employees' => count($pmResults),
+            'total_employees' => count($this->tipsData),
+            'eligible_employees_count' => $eligibleEmployees,
+            'am_total_points' => array_sum(array_column($amResults, 'calculated_points')),
+            'pm_total_points' => array_sum(array_column($pmResults, 'calculated_points')),
+            'total_points' => array_sum(array_column($this->tipsData, 'calculated_points')),
+            'am_tip_per_point' => count($amResults) > 0 && array_sum(array_column($amResults, 'calculated_points')) > 0 ? (($amTips ? $amTips->amount : 0) / array_sum(array_column($amResults, 'calculated_points'))) : 0,
+            'pm_tip_per_point' => count($pmResults) > 0 && array_sum(array_column($pmResults, 'calculated_points')) > 0 ? (($pmTips ? $pmTips->amount : 0) / array_sum(array_column($pmResults, 'calculated_points'))) : 0,
+        ];
+
+        // Sort by calculated points descending
+        usort($this->tipsData, fn ($a, $b) => $b['calculated_points'] <=> $a['calculated_points']);
+    }
+
+    private function processShift($employees, $dailyTip, $shift)
+    {
+        if (! $dailyTip || ! $dailyTip->amount || empty($employees)) {
+            return [];
+        }
+
+        // Group employees by employee name and job title for this shift
+        $groupedEntries = [];
+
+        foreach ($employees as $entry) {
             // Check if job position applies for tips
             $jobPosition = JobPosition::where('name', $entry->job_title)->first();
 
@@ -97,6 +163,7 @@ class TipsPool extends Page implements Forms\Contracts\HasForms
                     'job_position' => $jobPosition,
                     'in_date' => $entry->in_date,
                     'out_date' => $entry->out_date,
+                    'shift' => $shift,
                 ];
             } else {
                 // Update dates if this entry has more recent times
@@ -112,7 +179,11 @@ class TipsPool extends Page implements Forms\Contracts\HasForms
             $groupedEntries[$key]['unpaid_break_time'] += $entry->unpaid_break_time ?? 0;
         }
 
-        // Process grouped entries
+        // Calculate tips for this shift
+        $shiftResults = [];
+        $totalPoints = 0;
+
+        // Process grouped entries for this shift
         foreach ($groupedEntries as $groupedEntry) {
             $hoursWorked = $groupedEntry['payable_hours'];
             $jobPosition = $groupedEntry['job_position'];
@@ -128,9 +199,10 @@ class TipsPool extends Page implements Forms\Contracts\HasForms
 
             $totalPoints += $calculatedPoints;
 
-            $this->tipsData[] = [
+            $shiftResults[] = [
                 'employee_name' => $groupedEntry['employee_name'],
                 'job_title' => $groupedEntry['job_title'],
+                'shift' => $shift,
                 'hours_worked' => $hoursWorked,
                 'job_position_points' => $jobPositionPoints,
                 'calculated_points' => round($calculatedPoints, 2),
@@ -142,30 +214,15 @@ class TipsPool extends Page implements Forms\Contracts\HasForms
             ];
         }
 
-        // Get daily tips amount for the selected date
-        $dailyTip = DailyTip::whereDate('date', $date)->first();
-        $totalTipsAmount = $dailyTip ? $dailyTip->amount : 0;
+        // Calculate tip per point for this shift
+        $tipPerPoint = $totalPoints > 0 ? $dailyTip->amount / $totalPoints : 0;
 
-        // Calculate tip per point
-        $tipPerPoint = $totalPoints > 0 ? $totalTipsAmount / $totalPoints : 0;
-
-        // Calculate individual tip amounts
-        foreach ($this->tipsData as &$data) {
-            $data['tip_amount'] = round($data['calculated_points'] * $tipPerPoint, 2);
+        // Assign tip amounts
+        foreach ($shiftResults as &$employee) {
+            $employee['tip_amount'] = round($employee['calculated_points'] * $tipPerPoint, 2);
         }
 
-        // Summary data
-        $this->summary = [
-            'total_employees' => count($this->tipsData),
-            'total_points' => round($totalPoints, 2),
-            'total_tips_amount' => $totalTipsAmount,
-            'tip_per_point' => round($tipPerPoint, 2),
-            'employees_full_points' => count(array_filter($this->tipsData, fn ($d) => $d['qualifies_for_full_points'])),
-            'employees_partial_points' => count(array_filter($this->tipsData, fn ($d) => ! $d['qualifies_for_full_points'])),
-        ];
-
-        // Sort by calculated points descending
-        usort($this->tipsData, fn ($a, $b) => $b['calculated_points'] <=> $a['calculated_points']);
+        return $shiftResults;
     }
 
     protected function getHeaderActions(): array

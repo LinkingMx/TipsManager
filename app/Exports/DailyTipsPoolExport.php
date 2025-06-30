@@ -48,11 +48,16 @@ class DailyTipsPoolSummarySheet implements \Maatwebsite\Excel\Concerns\FromArray
         return [
             ['Report Date', \Carbon\Carbon::parse($this->selectedDate)->format('F j, Y')],
             ['Total Employees', $this->summary['total_employees']],
-            ['Employees with Full Points', $this->summary['employees_full_points']],
-            ['Employees with Partial Points', $this->summary['employees_partial_points']],
+            ['AM Employees', $this->summary['am_employees']],
+            ['PM Employees', $this->summary['pm_employees']],
             ['Total Points', number_format($this->summary['total_points'], 2)],
+            ['AM Points', number_format($this->summary['am_total_points'], 2)],
+            ['PM Points', number_format($this->summary['pm_total_points'], 2)],
             ['Total Tips Amount', '$'.number_format($this->summary['total_tips_amount'], 2)],
-            ['Tip Per Point', '$'.number_format($this->summary['tip_per_point'], 2)],
+            ['AM Tips Amount', '$'.number_format($this->summary['am_tips_amount'], 2)],
+            ['PM Tips Amount', '$'.number_format($this->summary['pm_tips_amount'], 2)],
+            ['AM Tip Per Point', '$'.number_format($this->summary['am_tip_per_point'], 2)],
+            ['PM Tip Per Point', '$'.number_format($this->summary['pm_tip_per_point'], 2)],
         ];
     }
 
@@ -77,7 +82,7 @@ class DailyTipsPoolSummarySheet implements \Maatwebsite\Excel\Concerns\FromArray
             'A:B' => [
                 'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT],
             ],
-            'A1:B8' => [
+            'A1:B12' => [
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
@@ -109,6 +114,7 @@ class DailyTipsPoolDetailsSheet implements \Maatwebsite\Excel\Concerns\FromArray
             $data[] = [
                 $row['employee_name'],
                 $row['job_title'],
+                $row['shift'] ?? '-',
                 $row['in_date'] ? \Carbon\Carbon::parse($row['in_date'])->format('m/d/Y H:i') : '-',
                 $row['out_date'] ? \Carbon\Carbon::parse($row['out_date'])->format('m/d/Y H:i') : '-',
                 number_format($row['unpaid_break_time'], 2).'h',
@@ -129,6 +135,7 @@ class DailyTipsPoolDetailsSheet implements \Maatwebsite\Excel\Concerns\FromArray
         return [
             'Employee Name',
             'Position',
+            'Shift',
             'In Date',
             'Out Date',
             'Unpaid Break',
@@ -151,7 +158,7 @@ class DailyTipsPoolDetailsSheet implements \Maatwebsite\Excel\Concerns\FromArray
                     'startColor' => ['rgb' => 'E8F5E8'],
                 ],
             ],
-            'A:K' => [
+            'A:L' => [
                 'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
             ],
             'A:B' => [
