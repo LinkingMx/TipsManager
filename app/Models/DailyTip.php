@@ -18,6 +18,7 @@ class DailyTip extends Model
     protected $fillable = [
         'date',
         'amount',
+        'shift_period',
         'notes',
     ];
 

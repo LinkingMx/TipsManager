@@ -20,6 +20,7 @@ class DailyTipFactory extends Factory
         return [
             'date' => fake()->dateTimeBetween('-30 days', 'now')->format('Y-m-d'),
             'amount' => fake()->randomFloat(2, 20, 300),
+            'shift_period' => fake()->randomElement(['AM', 'PM']),
             'notes' => fake()->optional(0.3)->sentence(),
         ];
     }
@@ -61,6 +62,26 @@ class DailyTipFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'amount' => fake()->randomFloat(2, 10, 50),
+        ]);
+    }
+
+    /**
+     * Indicate this is an AM shift
+     */
+    public function am(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'shift_period' => 'AM',
+        ]);
+    }
+
+    /**
+     * Indicate this is a PM shift
+     */
+    public function pm(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'shift_period' => 'PM',
         ]);
     }
 }

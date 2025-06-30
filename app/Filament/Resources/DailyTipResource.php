@@ -34,9 +34,26 @@ class DailyTipResource extends Resource
                     ->schema([
                         Forms\Components\DatePicker::make('date')
                             ->required()
-                            ->unique(DailyTip::class, 'date', ignoreRecord: true)
+                            ->unique(
+                                table: DailyTip::class,
+                                column: 'date',
+                                ignoreRecord: true,
+                                modifyRuleUsing: function ($rule, $get) {
+                                    return $rule->where('shift_period', $get('shift_period'));
+                                }
+                            )
                             ->default(now())
-                            ->helperText('Each date can only have one tip entry')
+                            ->helperText('Each date can have one AM and one PM entry')
+                            ->columnSpan(1),
+
+                        Forms\Components\Select::make('shift_period')
+                            ->required()
+                            ->options([
+                                'AM' => 'AM (Morning Shift)',
+                                'PM' => 'PM (Evening Shift)',
+                            ])
+                            ->default('AM')
+                            ->helperText('Select whether this is for the morning or evening shift')
                             ->columnSpan(1),
 
                         Forms\Components\TextInput::make('amount')
@@ -46,8 +63,8 @@ class DailyTipResource extends Resource
                             ->minValue(0)
                             ->prefix('$')
                             ->placeholder('0.00')
-                            ->helperText('Total tips amount for the day')
-                            ->columnSpan(1),
+                            ->helperText('Total tips amount for the shift')
+                            ->columnSpan(2),
 
                         Forms\Components\Textarea::make('notes')
                             ->placeholder('Optional notes about the tips for this day...')
@@ -69,6 +86,19 @@ class DailyTipResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->description(fn (DailyTip $record): string => $record->day_of_week),
+
+                Tables\Columns\TextColumn::make('shift_period')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'AM' => 'warning',
+                        'PM' => 'success',
+                    })
+                    ->icon(fn (string $state): string => match ($state) {
+                        'AM' => 'heroicon-m-sun',
+                        'PM' => 'heroicon-m-moon',
+                    })
+                    ->sortable()
+                    ->label('Shift'),
 
                 Tables\Columns\TextColumn::make('amount')
                     ->money('USD')
@@ -96,6 +126,13 @@ class DailyTipResource extends Resource
                     ->label('Updated'),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('shift_period')
+                    ->options([
+                        'AM' => 'AM (Morning)',
+                        'PM' => 'PM (Evening)',
+                    ])
+                    ->label('Shift Period'),
+
                 Tables\Filters\Filter::make('current_week')
                     ->query(fn (Builder $query): Builder => $query->currentWeek())
                     ->label('Current Week'),
