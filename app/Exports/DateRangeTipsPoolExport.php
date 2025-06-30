@@ -54,7 +54,11 @@ class SummarySheet implements FromArray, WithHeadings, WithStyles, WithTitle
             ['Date Range', $this->summary['date_range']],
             ['Total Days', $this->summary['total_days']],
             ['Total Employees', $this->summary['total_employees']],
+            ['AM Employees', $this->summary['am_employees']],
+            ['PM Employees', $this->summary['pm_employees']],
             ['Total Points', number_format($this->summary['total_points'], 2)],
+            ['AM Tips Amount', '$'.number_format($this->summary['am_tips_amount'], 2)],
+            ['PM Tips Amount', '$'.number_format($this->summary['pm_tips_amount'], 2)],
             ['Total Tips Amount', '$'.number_format($this->summary['total_tips_amount'], 2)],
             ['Tip Per Point', '$'.number_format($this->summary['tip_per_point'], 2)],
             ['Average Tips Per Day', '$'.number_format($this->summary['avg_tips_per_day'], 2)],
@@ -82,7 +86,7 @@ class SummarySheet implements FromArray, WithHeadings, WithStyles, WithTitle
             'A:B' => [
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT],
             ],
-            'A1:B8' => [
+            'A1:B11' => [
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
@@ -114,6 +118,7 @@ class TipsDistributionSheet implements FromArray, WithHeadings, WithStyles, With
             $data[] = [
                 $row['employee_name'],
                 $row['job_title'],
+                $row['shift'] ?? '-',
                 number_format($row['total_hours'], 2),
                 number_format($row['avg_hours_per_day'], 2),
                 $row['days_worked'],
@@ -131,6 +136,7 @@ class TipsDistributionSheet implements FromArray, WithHeadings, WithStyles, With
         return [
             'Employee Name',
             'Position',
+            'Shift',
             'Total Hours',
             'Avg Hours Per Day',
             'Days Worked',
@@ -150,7 +156,7 @@ class TipsDistributionSheet implements FromArray, WithHeadings, WithStyles, With
                     'startColor' => ['rgb' => 'E8F5E8'],
                 ],
             ],
-            'A:H' => [
+            'A:I' => [
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             ],
             'A:B' => [
@@ -178,13 +184,14 @@ class DailyBreakdownSheet implements FromArray, WithHeadings, WithStyles, WithTi
     {
         $data = [];
         foreach ($this->dailyBreakdown as $day) {
-            // Add day header
+            // Add day header with AM/PM breakdown
             $data[] = [
                 'DATE: '.\Carbon\Carbon::parse($day['date'])->format('F j, Y'),
-                'Employees: '.$day['total_employees'],
-                'Points: '.number_format($day['total_points'], 2),
-                'Tips: $'.number_format($day['total_tips'], 2),
-                '',
+                'Total Employees: '.$day['total_employees'],
+                'AM: '.$day['am_employees'].' | PM: '.$day['pm_employees'],
+                'AM Tips: $'.number_format($day['am_tips'], 2),
+                'PM Tips: $'.number_format($day['pm_tips'], 2),
+                'Total: $'.number_format($day['total_tips'], 2),
             ];
 
             // Add employee details for this day
@@ -192,14 +199,15 @@ class DailyBreakdownSheet implements FromArray, WithHeadings, WithStyles, WithTi
                 $data[] = [
                     '  '.$employee['employee_name'],
                     $employee['job_title'],
+                    $employee['shift'] ?? '-',
                     number_format($employee['hours_worked'], 2).'h',
                     number_format($employee['calculated_points'], 2),
-                    '',
+                    '$'.number_format($employee['tip_amount'], 2),
                 ];
             }
 
             // Add empty row for separation
-            $data[] = ['', '', '', '', ''];
+            $data[] = ['', '', '', '', '', ''];
         }
 
         return $data;
@@ -210,9 +218,10 @@ class DailyBreakdownSheet implements FromArray, WithHeadings, WithStyles, WithTi
         return [
             'Employee / Date',
             'Position / Summary',
-            'Hours / Points',
-            'Points / Tips',
-            '',
+            'Shift / Breakdown',
+            'Hours / AM Tips',
+            'Points / PM Tips',
+            'Tip Amount / Total',
         ];
     }
 
@@ -226,7 +235,7 @@ class DailyBreakdownSheet implements FromArray, WithHeadings, WithStyles, WithTi
                     'startColor' => ['rgb' => 'FFF3E0'],
                 ],
             ],
-            'A:E' => [
+            'A:F' => [
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT],
             ],
         ];
